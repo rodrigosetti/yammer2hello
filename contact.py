@@ -63,8 +63,7 @@ class Contact(object):
                 resource_list.append( Resource(width=300, height=300, mime=params['profile_image_mime'], data=resource_data, active=True) )
 
         # Create note and return
-        t = Template(self.helloTemplate)
-        s = t.substitute(params)
+        s = Template(self.helloTemplate).substitute(params)
         note_content = s.encode('utf-8', errors='ignore')
         #note_content = Template(self.helloTemplate).substitute(params).decode('utf-8', errors='ignore')
         return Note(title=params['display_as'], content=note_content, active=True, resources=resource_list)

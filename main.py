@@ -3,8 +3,9 @@
 
 def findNoteForContact(notes, contact):
     for note in notes:
-        content = note.getContent()
-        if contact.name in content or contact.email in content:
+        content = note.getContent().decode('ascii', errors='ignore')
+        if ((contact.name and contact.name in content) or
+            (contact.email and contact.email in content)):
             return note
 
     return None
