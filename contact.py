@@ -16,8 +16,8 @@ class Contact(object):
 
         # extract some basic info
         self.name = escape(self.user['full_name'])  if 'full_name' in self.user and self.user['full_name'] else ''
-        if 'contact' in self.user and 'email_addresses'  in self.user['contact'] and self.user['contact']['email_addresses'] and 'adress' in self.user['contact']['email_addresses'][0]:
-            self.email = self.user['contact']['email_addresses'][0]['adress']
+        if 'contact' in self.user and 'email_addresses'  in self.user['contact'] and self.user['contact']['email_addresses'] and 'address' in self.user['contact']['email_addresses'][0]:
+            self.email = self.user['contact']['email_addresses'][0]['address']
             self.email = escape(self.email) if self.email else ''
         else:
             self.email = ''
