@@ -66,7 +66,7 @@ class Contact(object):
             logging.warn("There's not a profile image for user %s" % self.name)
 
         # Create note and return
-        note_content = self.helloTemplate.render(self.user)
+        note_content = self.helloTemplate.render(self.user).encode('utf-8', errors='ignore')
         return Note(title=self.name, content=note_content, active=True, resources=resource_list)
 
     def __getattr__(self, name):
