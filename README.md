@@ -1,7 +1,7 @@
 # Yammer2Hello
 
 This application connects to Yammer API, grab all your contacts and transform
-them into Hello-like Notes in a Notebook of your choice at you Evernote
+them into Hello-like Notes in a Notebook of your choice at your Evernote
 account.
 
 ## Prerequisites
@@ -28,4 +28,14 @@ the application will ask you. For Yammer authentication, please follow the instr
       -c, --create-notebook
                             If notebook is not present, create it
       -d, --dont-update     Don't update contact if already present in Hello
+      
+## TODO/Issues
+
+  * A "delete unexistent contacts" option to remove Notes that are no match in Yammer.
+  * Currently, this application fetches all Yammer contacts, ignoring "Networks". If one
+    has more than a Network, this could be a problem. Also, it exports "inactive" users.
+  * Some images are not displaying.
+  * Not yet working with Hello app.
+  * When updating, sometimes the application creates a duplicated Note contact.
+
 
