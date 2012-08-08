@@ -48,7 +48,7 @@ class Contact(object):
 
             if u.getcode() == 200:
                 # find out resource mime type
-                self.user['profile_image_mime'] = u.headers['content-type']  if 'content-type' in u.headers else 'image/png'
+                self.user['profile_image_mime'] = u.headers['content-type'].lower() if 'content-type' in u.headers else 'image/png'
 
                 # Create Resource data
                 image_data = u.read()
