@@ -29,14 +29,14 @@
             </span>
           </p>
         {% endfor %}
-        {% for im in contact.im %}
+        {% if contact.im and contact.im.username %}
           <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
-              <span style="color:rgb(51, 51, 51);">{{ im.provider }}: </span>
+              <span style="color:rgb(51, 51, 51);">{{ contact.im.provider }}: </span>
             <span style="x-evernote:im">
-                <span style="x-evernote:value">{{ im.username }}</span>
+                <span style="x-evernote:value">{{ contact.im.username }}</span>
             </span>
           </p>
-        {% endfor %}
+        {% endif %}
         </div>
         {% endif %}
         <hr style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-top-color:rgb(210, 210, 210);border-top-width:1px;border-top-style:solid;border-bottom-color:rgb(252, 252, 252);border-bottom-width:1px;border-bottom-style:solid;border-right-style:none;border-left-style:none;"/>
