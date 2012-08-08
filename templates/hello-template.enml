@@ -94,7 +94,7 @@
           <div style="margin-top:0px;margin-right:30px;margin-bottom:0px;margin-left:30px;padding-top:3px;padding-bottom:18px;">
             {% for school in schools %}
               <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
-                  <span style="color:rgb(51, 51, 51);">{{ school.school }} ({{ school.start_year }} to {{ school.end_year }}. Degree: {{ school.degree }}. {{ school.description }}</span>
+                  <span style="color:rgb(51, 51, 51);">{{ school.school }}{% if school.start_year and school.end_year %} ({{ school.start_year }} to {{ school.end_year }}){% endif %}.{% if school.degree %} Degree: {{ school.degree }}.{% endif %} {{ school.description }}</span>
               </p>
             {% endfor %}
           </div>
@@ -104,7 +104,7 @@
           <div style="margin-top:0px;margin-right:30px;margin-bottom:0px;margin-left:30px;padding-top:3px;padding-bottom:18px;">
             {% for company in previous_companies %}
               <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
-                  <span style="color:rgb(51, 51, 51);">{{ company.employer }} ({{ company.start_year }} to {{ company.end_year }}. Position: {{ company.position }}. {{ company.description }}</span>
+                  <span style="color:rgb(51, 51, 51);">{{ company.employer }}{% if company.start_year and company.end_year %} ({{ company.start_year }} to {{ company.end_year }}){% endif %}.{% if company.position %} Position: {{ company.position }}.{% endif %} {{ company.description }}</span>
               </p>
             {% endfor %}
           </div>
