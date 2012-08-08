@@ -1,14 +1,15 @@
 # coding: utf-8
 
-import logging
+from config import *
 from evernote.edam.error.ttypes import EDAMUserException, EDAMSystemException
 from evernote.edam.notestore.ttypes import NoteFilter
 from evernote.edam.type.ttypes import NoteSortOrder
+from evernote.edam.type.ttypes import Notebook as EDAMNotebook
 import evernote.edam.notestore.NoteStore as NoteStore
 import evernote.edam.userstore.UserStore as UserStore
+import logging
 import thrift.protocol.TBinaryProtocol as TBinaryProtocol
 import thrift.transport.THttpClient as THttpClient
-from config import *
 
 __all__ = ['EvernoteConnector', 'Notebook', 'Note']
 
@@ -54,6 +55,10 @@ class EvernoteConnector(object):
             return False
 
         return True
+
+    def createNotebook(self, name):
+        return Notebook(self.noteStore.createNotebook(self.authToken, EDAMNotebook(name=name, defaultNotebook=False)),
+                        self.noteStore, self.authToken)
 
     def getNotebookByName(self, notebookName):
         """
