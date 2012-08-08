@@ -4,6 +4,10 @@ This application connects to Yammer API, grab all your contacts and transform
 them into Hello-like Notes in a Notebook of your choice at you Evernote
 account.
 
+## Prerequisites
+
+  * Jinja2 (templating engine): http://jinja.pocoo.org/docs/intro/#installation
+
 ## Usage
 
 You can pass Evernote username, password and notebook in the command line parameters, or

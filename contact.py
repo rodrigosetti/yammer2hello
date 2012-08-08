@@ -4,14 +4,23 @@ from evernote.edam.type.ttypes import Resource, Note, Data
 from string import Template
 from xml.sax.saxutils import escape
 import hashlib
+import jinja2
 import os
 import urllib
+import logging
 
 __all__ = ['Contact']
 
 class Contact(object):
+    """
+    This is the glue between Yammer and Evernote. It transforms from Yammer
+    API's JSON response into Evernote's ENML format. The object is constructed
+    with a parsed JSON representing a Yammer user, and the method "toNote"
+    returns an Evernote's Note with the user's data.
+    """
 
     def __init__(self, yammerUserJsonObject):
+        "Creates a Contact from a parsed JSON Yammer user's object"
         self.user = yammerUserJsonObject
 
         # extract some basic info
@@ -20,27 +29,15 @@ class Contact(object):
             self.email = self.user['contact']['email_addresses'][0]['address']
             self.email = escape(self.email) if self.email else ''
         else:
+            logging.warn("User %s has no email" % self.name)
             self.email = ''
 
-        # load ENML file template
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'hello-template.enml')) as f:
-            self.helloTemplate = f.read()
+        # Load file template
+        env = jinja2.Environment(loader=jinja2.PackageLoader(__name__, 'templates'), autoescape=True)
+        self.helloTemplate = env.get_template('hello-template.enml')
 
     def toNote(self):
-
-        params = {}
-
-        params['display_as'] = self.name
-        params['email'] = self.email
-        params['given_name'] = escape(self.user['first_name'])  if 'first_name' in self.user and self.user['first_name'] else ''
-        params['family_name'] = escape(self.user['last_name'])  if 'last_name' in self.user and self.user['last_name'] else ''
-        params['place_address'] = escape(self.user['location'])  if 'location' in self.user and self.user['location'] else ''
-
-        if 'contact' in self.user and 'phone_numbers'  in self.user['contact'] and self.user['contact']['phone_numbers'] and 'number' in self.user['contact']['phone_numbers'][0]:
-            params['phone'] = self.user['contact']['phone_numbers'][0]['number']
-            params['phone'] = escape(params['phone']) if params['phone'] else ''
-        else:
-            params['phone'] = ''
+        "Returns an Evernote's Note from this Contact data"
 
         # Load resources
         resource_list = []
@@ -51,23 +48,27 @@ class Contact(object):
 
             if u.getcode() == 200:
                 # find out resource mime type
-                params['profile_image_mime'] = u.headers['content-type']  if 'content-type' in u.headers else 'image/png'
+                self.user['profile_image_mime'] = u.headers['content-type']  if 'content-type' in u.headers else 'image/png'
 
                 # Create Resource data
                 image_data = u.read()
                 image_hash = hashlib.md5(image_data)
-                params['profile_image_hash'] = image_hash.hexdigest()
+                self.user['profile_image_hash'] = image_hash.hexdigest()
                 resource_data = Data(size=len(image_data), bodyHash=image_hash.digest(), body=image_data)
 
                 # append resource to resources list
-                resource_list.append( Resource(width=300, height=300, mime=params['profile_image_mime'], data=resource_data, active=True) )
+                resource_list.append( Resource(width=300, height=300,
+                                               mime=self.user['profile_image_mime'],
+                                               data=resource_data, active=True) )
+            else:
+                logging.warn("Could not retrieve profile image from %s, response code: %d" % (mugshot_url, u.getcode()))
+        else:
+            logging.warn("There's not a profile image for user %s" % self.name)
 
         # Create note and return
-        s = Template(self.helloTemplate).substitute(params)
-        note_content = s.encode('utf-8', errors='ignore')
-        #note_content = Template(self.helloTemplate).substitute(params).decode('utf-8', errors='ignore')
-        return Note(title=params['display_as'], content=note_content, active=True, resources=resource_list)
+        note_content = self.helloTemplate.render(self.user)
+        return Note(title=self.name, content=note_content, active=True, resources=resource_list)
 
     def __getattr__(self, name):
-        return self.user.__getattr__(name)
+        return self.user[name]
 

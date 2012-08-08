@@ -27,6 +27,11 @@ class YammerConnector(object):
         return True
 
     def _requestAccessTokenAndSave(self):
+        """
+        The Access token is saved in a file to avoid asking all the time.  When
+        this method is called, some instructions are presented to the user to
+        get the access code, then, saves it into a file
+        """
         # Request access token and save to file
         print "Instructions to authorize Yammer:"
         print "1. Please goto https://www.yammer.com/dialog/oauth?client_id=%s" % YAMMER_CONSUMER_KEY
@@ -37,8 +42,11 @@ class YammerConnector(object):
         with open(os.path.expanduser(ACCESS_TOKEN_FILE), 'w') as f:
             f.write(self.accessToken)
 
-
     def getUsers(self):
+        """
+        This method returns a generator that yields parsed JSON user objects.
+        It paginates until there's no data left.
+        """
         page = 1
 
         while True:

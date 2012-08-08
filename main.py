@@ -2,6 +2,10 @@
 # coding: utf-8
 
 def findNoteForContact(notes, contact):
+    """
+    From the list of notes, find the one (if any) that matches the given
+    contact
+    """
     for note in notes:
         content = note.getContent().decode('ascii', errors='ignore')
         if ((contact.name and contact.name in content) or

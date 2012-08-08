@@ -56,6 +56,9 @@ class EvernoteConnector(object):
         return True
 
     def getNotebookByName(self, notebookName):
+        """
+        Finds and retrieves the Notebook object from the given name
+        """
         notebooks = self.noteStore.listNotebooks(self.authToken)
         for notebook in notebooks:
             if notebook.name == notebookName:

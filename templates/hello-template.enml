@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
+<en-note style="font-size:14px;line-height:18px;color:rgb(128, 128, 128);font-family:Helvetica;background-color:rgb(86, 81, 78);text-align:center;">
+  <span style="x-evernote:hello-encounter">
+    <div style="max-width:420px;min-width:300px;margin-top:30px;margin-right:auto;margin-bottom:30px;margin-left:auto;-webkit-box-shadow:rgba(0, 0, 0, 0.496094) 0px 3px 15px;text-align:left;background-color:rgb(221, 221, 221);">
+        <en-media style="display:block;width:300px;height:300px;x-evernote:profile-image;" hash="{{ profile_image_hash }}" type="{{ profile_image_mime }}"/>
+      <hr style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-top-color:rgb(210, 210, 210);border-top-width:1px;border-top-style:solid;border-bottom-color:rgb(252, 252, 252);border-bottom-width:1px;border-bottom-style:solid;border-right-style:none;border-left-style:none;"/>
+      <div style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;background-color:rgb(239, 239, 239);">
+        <p style="margin-top:0px;margin-bottom:0px;margin-right:30px;margin-left:30px;padding-top:9px;padding-right:0px;padding-bottom:12px;padding-left:0px;font-size:36px;line-height:40px;color:rgb(111, 181, 54);word-wrap:break-word;">
+            <span style="x-evernote:display-as">{{ full_name }}</span>
+        </p>
+        <p style="margin-top:0px;margin-bottom:12px;padding-left:5%%;padding-right:5%%;">First Name: <span style="x-evernote:given-name">{{ first_name }}</span><br/>Last Name: <span style="x-evernote:family-name">{{ last_name }}</span></p>
+        {% if contact %}
+        <hr style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-top-color:rgb(210, 210, 210);border-top-width:1px;border-top-style:solid;border-bottom-color:rgb(252, 252, 252);border-bottom-width:1px;border-bottom-style:solid;border-right-style:none;border-left-style:none;"/>
+        <div style="margin-top:0px;margin-right:30px;margin-bottom:0px;margin-left:30px;padding-top:3px;padding-bottom:18px;">
+        {% for email in contact.email_addresses %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+              <span style="color:rgb(51, 51, 51);">email ({{ email.type }}): </span>
+            <span style="x-evernote:email">
+                <span style="x-evernote:value">{{ email.address }}</span>
+            </span>
+          </p>
+        {% endfor %}
+        {% for phone in contact.phone_numbers %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+              <span style="color:rgb(51, 51, 51);">phone ({{ phone.type }}): </span>
+            <span style="x-evernote:phone">
+                <span style="x-evernote:value">{{ phone.number }}</span>
+            </span>
+          </p>
+        {% endfor %}
+        {% for im in contact.im %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+              <span style="color:rgb(51, 51, 51);">{{ im.provider }}: </span>
+            <span style="x-evernote:im">
+                <span style="x-evernote:value">{{ im.username }}</span>
+            </span>
+          </p>
+        {% endfor %}
+        </div>
+        {% endif %}
+        <hr style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-top-color:rgb(210, 210, 210);border-top-width:1px;border-top-style:solid;border-bottom-color:rgb(252, 252, 252);border-bottom-width:1px;border-bottom-style:solid;border-right-style:none;border-left-style:none;"/>
+        <div style="margin-top:0px;margin-right:30px;margin-bottom:0px;margin-left:30px;padding-top:3px;padding-bottom:18px;">
+        {% if department %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+            <span style="color:rgb(51, 51, 51);">department: </span>
+            <span style="x-evernote:department">
+                <span style="x-evernote:value">{{ department }}</span>
+            </span>
+          </p>
+          {% endif %}
+          {% if job_title %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+            <span style="color:rgb(51, 51, 51);">job title: </span>
+            <span style="x-evernote:job-title">
+                <span style="x-evernote:value">{{ job_title }}</span>
+            </span>
+          </p>
+          {% endif %}
+          {% if expertise %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+            <span style="color:rgb(51, 51, 51);">expertise: </span>
+            <span style="x-evernote:expertise">
+              <span style="x-evernote:value">{{ expertise }}</span>
+            </span>
+          </p>
+          {% endif %}
+          {% if location %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+            <span style="color:rgb(51, 51, 51);">location: </span>
+            <span style="x-evernote:place-address">
+              <span style="x-evernote:value">{{ location }}</span>
+            </span>
+          </p>
+          {% endif %}
+          {% if timezone %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+            <span style="color:rgb(51, 51, 51);">timezone: </span>
+            <span style="x-evernote:timezone">
+              <span style="x-evernote:value">{{ timezone }}</span>
+            </span>
+          </p>
+          {% endif %}
+          {% if interests %}
+          <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+            <span style="color:rgb(51, 51, 51);">interests: </span>
+            <span style="x-evernote:interests">
+              <span style="x-evernote:value">{{ interests }}</span>
+            </span>
+          </p>
+          {% endif %}
+          {% if schools %}
+          <hr style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-top-color:rgb(210, 210, 210);border-top-width:1px;border-top-style:solid;border-bottom-color:rgb(252, 252, 252);border-bottom-width:1px;border-bottom-style:solid;border-right-style:none;border-left-style:none;"/>
+          <div style="margin-top:0px;margin-right:30px;margin-bottom:0px;margin-left:30px;padding-top:3px;padding-bottom:18px;">
+            {% for school in schools %}
+              <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+                  <span style="color:rgb(51, 51, 51);">{{ school.school }} ({{ school.start_year }} to {{ school.end_year }}. Degree: {{ school.degree }}. {{ school.description }}</span>
+              </p>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if previous_companies %}
+          <hr style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-top-color:rgb(210, 210, 210);border-top-width:1px;border-top-style:solid;border-bottom-color:rgb(252, 252, 252);border-bottom-width:1px;border-bottom-style:solid;border-right-style:none;border-left-style:none;"/>
+          <div style="margin-top:0px;margin-right:30px;margin-bottom:0px;margin-left:30px;padding-top:3px;padding-bottom:18px;">
+            {% for company in previous_companies %}
+              <p style="margin-top:9px;margin-bottom:9px;margin-right:0px;margin-left:0px;">
+                  <span style="color:rgb(51, 51, 51);">{{ company.employer }} ({{ company.start_year }} to {{ company.end_year }}. Position: {{ company.position }}. {{ company.description }}</span>
+              </p>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </span>
+</en-note>
+
