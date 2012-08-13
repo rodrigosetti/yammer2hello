@@ -1,0 +1,27 @@
+BEGIN:VCARD
+VERSION:4.0
+N:{{ last_name }};{{ first_name }};;;
+FN:{{ full_name }}
+{% if photo_base64 %}
+PHOTO:{{ photo_base64 }}
+{% else %}
+PHOTO:{{ mugshot_url }}
+{% endif %}
+BDAY:{{ birth_date }}
+{% if contact %}
+{% for phone in contact.phone_numbers %}
+TEL:{{ phone.number }}
+{% endfor %}
+{% for email in contact.email_addresses %}
+EMAIL:{{ email.address }}
+{% endfor %}
+{% endif %}
+TZ:{{ timezone }}
+TITLE:{{ job_title }}
+ORG:{{ network_name }}
+NOTE:{{ summary }}
+REV:{{ now }}
+URL:{{ web_url }}
+UID:{{ id }}
+END:VCARD
+

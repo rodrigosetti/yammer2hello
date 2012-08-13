@@ -3,7 +3,7 @@
 <en-note style="font-size:14px;line-height:18px;color:rgb(128, 128, 128);font-family:Helvetica;background-color:rgb(86, 81, 78);text-align:center;">
   <span style="x-evernote:hello-encounter">
     <div style="max-width:420px;min-width:300px;margin-top:30px;margin-right:auto;margin-bottom:30px;margin-left:auto;-webkit-box-shadow:rgba(0, 0, 0, 0.496094) 0px 3px 15px;text-align:left;background-color:rgb(221, 221, 221);">
-        <en-media style="display:block;width:300px;height:300px;x-evernote:profile-image;" hash="{{ profile_image_hash }}" type="{{ profile_image_mime }}"/>
+        <en-media style="display:block;width:300px;height:300px;x-evernote:profile-image;" hash="{{ profile_image_hash }}" type="{{ profile_image_mime }}" alt="{{ full_name }} picture" longdesc="{{ full_name }} picture"/>
       <hr style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-top-color:rgb(210, 210, 210);border-top-width:1px;border-top-style:solid;border-bottom-color:rgb(252, 252, 252);border-bottom-width:1px;border-bottom-style:solid;border-right-style:none;border-left-style:none;"/>
       <div style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;background-color:rgb(239, 239, 239);">
         <p style="margin-top:0px;margin-bottom:0px;margin-right:30px;margin-left:30px;padding-top:9px;padding-right:0px;padding-bottom:12px;padding-left:0px;font-size:36px;line-height:40px;color:rgb(111, 181, 54);word-wrap:break-word;">
@@ -113,5 +113,6 @@
       </div>
     </div>
   </span>
+  <en-media style="x-evernote:vcard;" hash="{{ vcard_hash }}" type="text/vcard" longdesc="User's Vcard" alt="VCard"/>
 </en-note>
 
