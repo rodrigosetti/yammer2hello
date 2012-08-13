@@ -1,13 +1,14 @@
 #coding: utf-8
 
-from evernote.edam.type.ttypes import Resource, Note, Data
+from base64 import b64encode
+from evernote.edam.type.ttypes import Resource, Note, Data, NoteAttributes, ResourceAttributes
 from string import Template
 from xml.sax.saxutils import escape
 import hashlib
 import jinja2
+import logging
 import os
 import urllib
-import logging
 
 __all__ = ['Contact']
 
@@ -35,6 +36,10 @@ class Contact(object):
         # Load file template
         env = jinja2.Environment(loader=jinja2.PackageLoader(__name__, 'templates'), autoescape=True)
         self.helloTemplate = env.get_template('hello-template.enml')
+        self.vcardTemplate = env.get_template('vcard.vcf')
+
+    def toVCard(self):
+        return self.vcardTemplate.render(self.user)
 
     def toNote(self):
         "Returns an Evernote's Note from this Contact data"
@@ -56,18 +61,35 @@ class Contact(object):
                 self.user['profile_image_hash'] = image_hash.hexdigest()
                 resource_data = Data(size=len(image_data), bodyHash=image_hash.digest(), body=image_data)
 
+                # put a base64 encoded text of the image content
+                self.user['photo_base64'] = b64encode(image_data)
+
                 # append resource to resources list
                 resource_list.append( Resource(width=300, height=300,
                                                mime=self.user['profile_image_mime'],
+                                               attributes=ResourceAttributes(fileName="%s.jpg" % self.name, attachment=False),
                                                data=resource_data, active=True) )
             else:
                 logging.warn("Could not retrieve profile image from %s, response code: %d" % (mugshot_url, u.getcode()))
         else:
             logging.warn("There's not a profile image for user %s" % self.name)
 
+        # Create VCard resource
+        vcard_content = self.toVCard()
+        vcard_hash = hashlib.md5(vcard_content)
+        self.user['vcard_hash'] = vcard_hash.hexdigest()
+        resource_list.append( Resource(mime='text/vcard', active=True,
+                                       attributes=ResourceAttributes(fileName="%s.vcf" % self.name, attachment=True),
+                                       data=Data(size=len(vcard_content),
+                                                 bodyHash=vcard_hash.digest(),
+                                                 body=vcard_content)) )
+
         # Create note and return
         note_content = self.helloTemplate.render(self.user).encode('utf-8', errors='ignore')
-        return Note(title=self.name, content=note_content, active=True, resources=resource_list)
+        note = Note(title=self.name, content=note_content, active=True, resources=resource_list,
+                    attributes=NoteAttributes(contentClass='evernote.hello.encounter.2'))
+
+        return note
 
     def __getattr__(self, name):
         return self.user[name]
