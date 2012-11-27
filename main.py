@@ -81,11 +81,11 @@ if __name__ == "__main__":
 
     # Check for every Yammer contact, if there's not contained
     # in hello's notebook. If not, create a new note for contact
-    for contact in contacts:
+    for n, contact in enumerate(contacts, 1):
         note = findNoteForContact(notes, contact)
         if note and not options.dont_update:
             logging.info("Updating %s..." % contact.name)
-            note.update(contact.toNote())
+            note.update(contact.toNote(n))
         else:
             logging.info("Creating note for %s..." % contact.name)
             notebook.createNote(contact.toNote())

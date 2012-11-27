@@ -41,8 +41,10 @@ class Contact(object):
     def toVCard(self):
         return self.vcardTemplate.render(self.user)
 
-    def toNote(self):
+    def toNote(self, encounter=1):
         "Returns an Evernote's Note from this Contact data"
+
+        encoded_name = self.name.encode('utf-8')
 
         # Load resources
         resource_list = []
@@ -67,7 +69,8 @@ class Contact(object):
                 # append resource to resources list
                 resource_list.append( Resource(width=300, height=300,
                                                mime=self.user['profile_image_mime'],
-                                               attributes=ResourceAttributes(fileName="%s.jpg" % self.name, attachment=False),
+                                               attributes=ResourceAttributes(fileName="%s.jpg" % encoded_name,
+                                                                             attachment=False),
                                                data=resource_data, active=True) )
             else:
                 logging.warn("Could not retrieve profile image from %s, response code: %d" % (mugshot_url, u.getcode()))
@@ -75,19 +78,21 @@ class Contact(object):
             logging.warn("There's not a profile image for user %s" % self.name)
 
         # Create VCard resource
-        vcard_content = self.toVCard().encode('utf-8', errors='ignore')
+        vcard_content = self.toVCard().encode('utf-8')
         vcard_hash = hashlib.md5(vcard_content)
         self.user['vcard_hash'] = vcard_hash.hexdigest()
         resource_list.append( Resource(mime='text/vcard', active=True,
-                                       attributes=ResourceAttributes(fileName="%s.vcf" % self.name, attachment=True),
+                                       attributes=ResourceAttributes(fileName="%s.vcf" % encoded_name,
+                                                                     attachment=True),
                                        data=Data(size=len(vcard_content),
                                                  bodyHash=vcard_hash.digest(),
                                                  body=vcard_content)) )
 
         # Create note and return
-        note_content = self.helloTemplate.render(self.user).encode('utf-8', errors='ignore')
-        note = Note(title=self.name, content=note_content, active=True, resources=resource_list,
-                    attributes=NoteAttributes(contentClass='evernote.hello.encounter.2'))
+        note_content = self.helloTemplate.render(self.user).encode('utf-8')
+        note = Note(title=encoded_name,
+                    content=note_content, active=True, resources=resource_list,
+                    attributes=NoteAttributes(contentClass='evernote.hello.encounter.%d' % encounter))
 
         return note
 
