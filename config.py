@@ -11,6 +11,7 @@ ACCESS_TOKEN_FILE = '~/.yammer-access-token'
 
 # Evernote parameters
 
+EVERNOTE_USER_STORE_URL = 'https://www.evernote.com/edam/user'
 EVERNOTE_CONSUMER_KEY = "mginzton"
 EVERNOTE_CONSUMER_SECRET = "28e08e681646b421"
 MAX_NOTES = 2048

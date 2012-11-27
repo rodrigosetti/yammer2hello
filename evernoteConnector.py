@@ -31,7 +31,7 @@ class EvernoteConnector(object):
         try:
             # Authentication boilerplate
             logging.debug("Authenticating user %s..." % self.username)
-            userStoreHTTPClient = THttpClient.THttpClient('https://www.evernote.com/edam/user')
+            userStoreHTTPClient = THttpClient.THttpClient(EVERNOTE_USER_STORE_URL)
             userStoreProtocol = TBinaryProtocol.TBinaryProtocol(userStoreHTTPClient)
             self._userStore = UserStore.Client(userStoreProtocol)
 
@@ -47,6 +47,7 @@ class EvernoteConnector(object):
             noteStoreHTTPClient = THttpClient.THttpClient(noteStoreURI)
             noteStoreProtocol = TBinaryProtocol.TBinaryProtocol(noteStoreHTTPClient)
             self.noteStore = NoteStore.Client(noteStoreProtocol)
+
         except EDAMUserException as e:
             logging.fatal('Could not authenticate, please check %s' % e.parameter)
             return False
