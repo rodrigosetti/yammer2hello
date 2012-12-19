@@ -57,9 +57,39 @@ class EvernoteConnector(object):
 
         return True
 
+    def connectToBusiness(self):
+
+        try:
+            authentication_result = self._userStore.authenticateToBusiness(self.authToken)
+
+            # Gets the authentication token for API calls and note store url
+            self.authToken = authentication_result.authenticationToken
+            noteStoreURI = authentication_result.noteStoreUrl
+
+            # connects to the note store
+            logging.debug("Connecting to NoteStore ...")
+            noteStoreHTTPClient = THttpClient.THttpClient(noteStoreURI)
+            noteStoreProtocol = TBinaryProtocol.TBinaryProtocol(noteStoreHTTPClient)
+            self.noteStore = NoteStore.Client(noteStoreProtocol)
+
+        except EDAMUserException as e:
+            logging.fatal('Could not authenticate, please check %s' % e.parameter)
+            return False
+        except EDAMSystemException as e:
+            logging.fatal('System error');
+            return False
+
+        return True
+
     def createNotebook(self, name):
         return Notebook(self.noteStore.createNotebook(self.authToken, EDAMNotebook(name=name, defaultNotebook=False)),
                         self.noteStore, self.authToken)
+
+    def getNotebookByGUID(self, notebookGUID):
+        """
+        Gets a notebook from GUID
+        """
+        return Notebook(self.noteStore.getNotebook(self.authToken, notebookGUID))
 
     def getNotebookByName(self, notebookName):
         """

@@ -56,6 +56,7 @@ if __name__ == "__main__":
         logging.fatal("Could not connect to Evernote")
         sys.exit(1)
 
+
     # Get Hello notes from Evernote
     # Check for required parameter, if not present, ask for it
     if not options.hello_notebook:
@@ -65,8 +66,16 @@ if __name__ == "__main__":
         if options.create_notebook:
             notebook = ec.createNotebook(options.hello_notebook)
         else:
-            logging.fatal('Notebook "%s" not found. If you want it to be created, pass --create-notebook in command line.' %  hello_notebook)
-            sys.exit(1)
+            # try to connect to business account
+            logging.debug("Authenticating to business...")
+            if ec.connectToBusiness():
+                notebook = ec.getNotebookByName(options.hello_notebook)
+                if not notebook:
+                    logging.fatal('Notebook "%s" not found (Personal and Business). If you want it to be created, pass --create-notebook in command line.' %  hello_notebook)
+                    sys.exit(1)
+            else:
+                logging.fatal('Notebook "%s" not found. If you want it to be created, pass --create-notebook in command line.' %  hello_notebook)
+                sys.exit(1)
 
     notes = notebook.getNotes()
 
