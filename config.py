@@ -14,7 +14,6 @@ ACCESS_TOKEN_FILE = '~/.yammer-access-token'
 EVERNOTE_USER_STORE_URL = 'https://www.evernote.com/edam/user'
 EVERNOTE_CONSUMER_KEY = "mginzton"
 EVERNOTE_CONSUMER_SECRET = "28e08e681646b421"
-MAX_NOTES = 2048
 
 # Logging level: one of DEBUG INFO WARNING ERROR CRITICAL
 # Can be overwritten by command line parameter

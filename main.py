@@ -1,28 +1,35 @@
 #! /usr/bin/env python
 # coding: utf-8
 
-def findNoteForContact(notes, contact):
-    """
-    From the list of notes, find the one (if any) that matches the given
-    contact
-    """
-    for note in notes:
-        content = note.getContent().decode('ascii', errors='ignore')
-        if ((contact.name and contact.name in content) or
-            (contact.email and contact.email in content)):
-            return note
+from config import *
+from contact import Contact
+from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
+from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
+from evernote_connector import EvernoteConnector
+from getpass import getpass
+from optparse import OptionParser
+from yammer_connector import YammerConnector
+import logging
+import sys
 
-    return None
+def match_notes_and_contacts(ec, notes, contacts):
+    """
+    If a contact exist as a note, mark the contact's note guid attribute.
+    """
+    id_notes = {}
+    for note in notes:
+        if note.attributes.applicationData and 'yammer.id' in note.attributes.applicationData.keysOnly:
+            id_notes[int(ec.get_note_application_data_entry(note.guid, 'yammer.id'))] = note
+
+    for contact in contacts:
+        if contact.id in id_notes:
+            note = id_notes[contact.id]
+            contact.note_guid = note.guid
+
+            if note.attributes.applicationData and 'yammer.profile.hash' in note.attributes.applicationData.keysOnly:
+                contact.previous_hash = int(ec.get_note_application_data_entry(note.guid, 'yammer.profile.hash'))
 
 if __name__ == "__main__":
-    from config import *
-    from contact import Contact
-    from evernoteConnector import EvernoteConnector
-    from getpass import getpass
-    from optparse import OptionParser
-    from yammerConnector import YammerConnector
-    import logging
-    import sys
 
     # Set command line parameters
     parser = OptionParser()
@@ -61,15 +68,15 @@ if __name__ == "__main__":
     # Check for required parameter, if not present, ask for it
     if not options.hello_notebook:
         options.hello_notebook = raw_input("Your Hello Notebook name: ")
-    notebook = ec.getNotebookByName(options.hello_notebook)
+    notebook = ec.get_notebook_by_name(options.hello_notebook)
     if not notebook:
         if options.create_notebook:
-            notebook = ec.createNotebook(options.hello_notebook)
+            notebook = ec.create_notebook(options.hello_notebook)
         else:
             # try to connect to business account
             logging.debug("Authenticating to business...")
-            if ec.connectToBusiness():
-                notebook = ec.getNotebookByName(options.hello_notebook)
+            if ec.connect_to_business():
+                notebook = ec.get_notebook_by_name(options.hello_notebook)
                 if not notebook:
                     logging.fatal('Notebook "%s" not found (Personal and Business). If you want it to be created, pass --create-notebook in command line.' %  hello_notebook)
                     sys.exit(1)
@@ -77,7 +84,11 @@ if __name__ == "__main__":
                 logging.fatal('Notebook "%s" not found. If you want it to be created, pass --create-notebook in command line.' %  hello_notebook)
                 sys.exit(1)
 
-    notes = notebook.getNotes()
+    # get all notes metadata from the notebook
+    notes = ec.find_notes_metadata(NoteFilter(notebookGuid=notebook.guid),
+                                   0,
+                                   EDAM_USER_NOTES_MAX,
+                                   NotesMetadataResultSpec(includeAttributes=True)).notes
 
     # Connect to yammer
     yc = YammerConnector()
@@ -86,16 +97,20 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # get contacts from Yammer
-    contacts = (Contact(user) for user in yc.getUsers())
+    contacts = list(Contact(user) for user in yc.get_users())
 
-    # Check for every Yammer contact, if there's not contained
-    # in hello's notebook. If not, create a new note for contact
-    for n, contact in enumerate(contacts, 1):
-        note = findNoteForContact(notes, contact)
-        if note and not options.dont_update:
-            logging.info("Updating %s..." % contact.name)
-            note.update(contact.toNote(n))
+    # Mark contacts that need update and new ones
+    match_notes_and_contacts(ec, notes, contacts)
+
+    # For each contact, create new ones, and update which needs update
+    for contact in contacts:
+        note = contact.to_note()
+        note.notebookGuid = notebook.guid
+        if note.guid:
+            if not options.dont_update and contact.needs_update:
+                logging.info("Updating %s" % note.title)
+                ec.update_note(note)
         else:
-            logging.info("Creating note for %s..." % contact.name)
-            notebook.createNote(contact.toNote())
+            logging.info("Creating %s" % note.title)
+            ec.create_note(note)
 

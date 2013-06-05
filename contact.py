@@ -1,9 +1,9 @@
 #coding: utf-8
 
 from base64 import b64encode
-from evernote.edam.type.ttypes import Resource, Note, Data, NoteAttributes, ResourceAttributes
-from string import Template
+from evernote.edam.type.ttypes import Resource, Note, Data, NoteAttributes, ResourceAttributes, LazyMap
 from xml.sax.saxutils import escape
+import copy
 import hashlib
 import jinja2
 import logging
@@ -12,20 +12,47 @@ import urllib
 
 __all__ = ['Contact']
 
+def make_hash(o):
+  """
+  Makes a hash of a json like object.
+  """
+  if isinstance(o, list):
+    return hash(tuple(sorted(make_hash(e) for e in o)))
+  elif not isinstance(o, dict):
+    return hash(o)
+
+  new_o = copy.deepcopy(o)
+  for k, v in new_o.items():
+    new_o[k] = make_hash(v)
+
+  return hash(tuple(sorted(new_o.items())))
+
+# Load templates
+env = jinja2.Environment(loader=jinja2.PackageLoader(__name__, 'templates'), autoescape=True)
+hello_template = env.get_template('hello-template.enml')
+vcard_template = env.get_template('vcard.vcf')
+
 class Contact(object):
     """
     This is the glue between Yammer and Evernote. It transforms from Yammer
     API's JSON response into Evernote's ENML format. The object is constructed
-    with a parsed JSON representing a Yammer user, and the method "toNote"
+    with a parsed JSON representing a Yammer user, and the method "to_note"
     returns an Evernote's Note with the user's data.
     """
 
-    def __init__(self, yammerUserJsonObject):
+    def __init__(self, yammer_user_json):
         "Creates a Contact from a parsed JSON Yammer user's object"
-        self.user = yammerUserJsonObject
+        self.user = yammer_user_json
+        del self.user['stats']
+
+        # default values
+        self.note_guid = None
+        self.previous_hash = None
+        self.needs_update = True
 
         # extract some basic info
         self.name = escape(self.user['full_name'])  if 'full_name' in self.user and self.user['full_name'] else ''
+        self.id = self.user['id']
         if 'contact' in self.user and 'email_addresses'  in self.user['contact'] and self.user['contact']['email_addresses'] and 'address' in self.user['contact']['email_addresses'][0]:
             self.email = self.user['contact']['email_addresses'][0]['address']
             self.email = escape(self.email) if self.email else ''
@@ -33,15 +60,16 @@ class Contact(object):
             logging.warn("User %s has no email" % self.name)
             self.email = ''
 
-        # Load file template
-        env = jinja2.Environment(loader=jinja2.PackageLoader(__name__, 'templates'), autoescape=True)
-        self.helloTemplate = env.get_template('hello-template.enml')
-        self.vcardTemplate = env.get_template('vcard.vcf')
+        # check if the user is active
+        self.is_active = 'state' in self.user and self.user['state'] == 'active'
 
-    def toVCard(self):
-        return self.vcardTemplate.render(self.user)
+    def __hash__(self):
+        return make_hash(self.user)
 
-    def toNote(self, encounter=1):
+    def to_vcard(self):
+        return vcard_template.render(self.user)
+
+    def to_note(self, encounter=1):
         "Returns an Evernote's Note from this Contact data"
 
         encoded_name = self.name.encode('utf-8')
@@ -78,7 +106,7 @@ class Contact(object):
             logging.warn("There's not a profile image for user %s" % self.name)
 
         # Create VCard resource
-        vcard_content = self.toVCard().encode('utf-8')
+        vcard_content = self.to_vcard().encode('utf-8')
         vcard_hash = hashlib.md5(vcard_content)
         self.user['vcard_hash'] = vcard_hash.hexdigest()
         resource_list.append( Resource(mime='text/vcard', active=True,
@@ -88,11 +116,19 @@ class Contact(object):
                                                  bodyHash=vcard_hash.digest(),
                                                  body=vcard_content)) )
 
+        # calculate hash and determine if the contact needs update
+        current_hash = hash(self)
+        self.needs_update = current_hash != self.previous_hash
+
         # Create note and return
-        note_content = self.helloTemplate.render(self.user).encode('utf-8')
-        note = Note(title=encoded_name,
+        note_content = hello_template.render(self.user).encode('utf-8')
+        application_data = LazyMap(fullMap={'yammer.id': str(self.user['id']),
+                                            'yammer.profile.hash': str(current_hash)})
+        note = Note(guid=self.note_guid,
+                    title=encoded_name,
                     content=note_content, active=True, resources=resource_list,
-                    attributes=NoteAttributes(contentClass='evernote.hello.encounter.%d' % encounter))
+                    attributes=NoteAttributes(contentClass='evernote.hello.encounter.%d' % encounter,
+                                              applicationData=application_data))
 
         return note
 
