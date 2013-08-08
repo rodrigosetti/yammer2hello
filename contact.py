@@ -49,6 +49,7 @@ class Contact(object):
         self.note_guid = None
         self.previous_hash = None
         self.needs_update = True
+        self.note_content_hash = None
 
         # extract some basic info
         self.name = escape(self.user['full_name'])  if 'full_name' in self.user and self.user['full_name'] else ''
@@ -62,9 +63,6 @@ class Contact(object):
 
         # check if the user is active
         self.is_active = 'state' in self.user and self.user['state'] == 'active'
-
-    def __hash__(self):
-        return make_hash(self.user)
 
     def to_vcard(self):
         return vcard_template.render(self.user)
@@ -102,8 +100,10 @@ class Contact(object):
                                                data=resource_data, active=True) )
             else:
                 logging.warn("Could not retrieve profile image from %s, response code: %d" % (mugshot_url, u.getcode()))
+                self.got_image = False   #
         else:
             logging.warn("There's not a profile image for user %s" % self.name)
+            self.got_image = False   #
 
         # Create VCard resource
         vcard_content = self.to_vcard().encode('utf-8')
@@ -116,17 +116,21 @@ class Contact(object):
                                                  bodyHash=vcard_hash.digest(),
                                                  body=vcard_content)) )
 
-        # calculate hash and determine if the contact needs update
-        current_hash = hash(self)
-        self.needs_update = current_hash != self.previous_hash
+        # render note ENML content
+        note_content = hello_template.render(self.user).encode('utf-8')
+
+        content_hash = hashlib.md5(note_content)
+        self.needs_update = content_hash.hexdigest() != self.note_content_hash
 
         # Create note and return
-        note_content = hello_template.render(self.user).encode('utf-8')
         application_data = LazyMap(fullMap={'yammer.id': str(self.user['id']),
-                                            'yammer.profile.hash': str(current_hash)})
+                                            'yammer.profile.hash': content_hash.hexdigest()})
+
         note = Note(guid=self.note_guid,
                     title=encoded_name,
                     content=note_content, active=True, resources=resource_list,
+                    contentHash = content_hash.digest(),
+                    contentLength = len(note_content),
                     attributes=NoteAttributes(contentClass='evernote.hello.encounter.%d' % encounter,
                                               applicationData=application_data))
 

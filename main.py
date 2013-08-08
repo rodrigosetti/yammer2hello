@@ -12,6 +12,35 @@ from yammer_connector import YammerConnector
 import logging
 import sys
 
+def find_all_notes_metadata(ec, note_filter, result_spec):
+    """Return a generator that yields NoteMetadata objects for all notes with the
+    given filter.
+
+    Args:
+      note_filter -
+        The NoteFilter object.
+      result_spec -
+        A NoteStore.NotesMetadataResultSpec object detailing which fields the
+        resulting NoteMetadata objects should contain.
+
+    Yields:
+      A NoteMetadata object for each note that satisfies the filter.
+    """
+    offset = 0
+    notes_page_size = 200
+
+    while True:
+        notes = ec.find_notes_metadata(note_filter, offset=offset,
+                                       maxNotes=notes_page_size,
+                                       resultSpec=result_spec)
+
+        for note_md in notes.notes:
+            yield note_md
+
+        offset = offset + len(notes.notes)
+        if offset >= notes.totalNotes:
+            break
+
 def match_notes_and_contacts(ec, notes, contacts):
     """
     If a contact exist as a note, mark the contact's note guid attribute.
@@ -20,14 +49,20 @@ def match_notes_and_contacts(ec, notes, contacts):
     for note in notes:
         if note.attributes.applicationData and 'yammer.id' in note.attributes.applicationData.keysOnly:
             id_notes[int(ec.get_note_application_data_entry(note.guid, 'yammer.id'))] = note
+        else:
+            print "Does not have yammer.id:", note.title
 
     for contact in contacts:
         if contact.id in id_notes:
             note = id_notes[contact.id]
+            del id_notes[contact.id]
             contact.note_guid = note.guid
 
-            if note.attributes.applicationData and 'yammer.profile.hash' in note.attributes.applicationData.keysOnly:
-                contact.previous_hash = int(ec.get_note_application_data_entry(note.guid, 'yammer.profile.hash'))
+            note_2 = ec.get_note(note.guid, False, False, False, False)     #
+            contact.got_image = len(note_2.resources) >= 2                  #
+
+#            if note.attributes.applicationData and 'yammer.profile.hash' in note.attributes.applicationData.keysOnly:
+#                contact.note_content_hash = int(ec.get_note_application_data_entry(note.guid, 'yammer.profile.hash'))
 
 if __name__ == "__main__":
 
@@ -85,32 +120,37 @@ if __name__ == "__main__":
                 sys.exit(1)
 
     # get all notes metadata from the notebook
-    notes = ec.find_notes_metadata(NoteFilter(notebookGuid=notebook.guid),
-                                   0,
-                                   EDAM_USER_NOTES_MAX,
-                                   NotesMetadataResultSpec(includeAttributes=True)).notes
+    logging.debug("Downloading notes metadata...")
+    notes = list(find_all_notes_metadata(ec, NoteFilter(notebookGuid=notebook.guid),
+                                         NotesMetadataResultSpec(includeAttributes=True,
+                                                                 includeLargestResourceMime=True)))
 
     # Connect to yammer
+    logging.debug("Connecting to Yammer...")
     yc = YammerConnector()
     if not yc.connect():
         logging.fatal("Could not connect to Yammer")
         sys.exit(1)
 
     # get contacts from Yammer
+    logging.debug("Downloading Yammer contacts...")
     contacts = list(Contact(user) for user in yc.get_users())
 
     # Mark contacts that need update and new ones
+    logging.debug("Checking which notes needs update...")
     match_notes_and_contacts(ec, notes, contacts)
 
     # For each contact, create new ones, and update which needs update
+    logging.debug("Uploading notes to Evernote...")
     for contact in contacts:
         note = contact.to_note()
         note.notebookGuid = notebook.guid
         if note.guid:
-            if not options.dont_update and contact.needs_update:
+#            if not options.dont_update and contact.needs_update:
+            if not contact.got_image:
                 logging.info("Updating %s" % note.title)
-                ec.update_note(note)
+#                ec.update_note(note)
         else:
             logging.info("Creating %s" % note.title)
-            ec.create_note(note)
+#            ec.create_note(note)
 

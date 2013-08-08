@@ -78,7 +78,16 @@ class EvernoteConnector(object):
             self._userStore = UserStore.Client(user_store_protocol)
 
             authentication_result = self._userStore.authenticate(self.username, self.password,
-                                                                 EVERNOTE_CONSUMER_KEY, EVERNOTE_CONSUMER_SECRET)
+                                                                 EVERNOTE_CONSUMER_KEY,
+                                                                 EVERNOTE_CONSUMER_SECRET,
+                                                                 True)
+
+            if authentication_result.secondFactorRequired:
+                code = raw_input("second factor required, please enter your code: ")
+                authentication_result = self._userStore.completeTwoFactorAuthentication(authentication_result.authenticationToken,
+                                                                                        code,
+                                                                                        "Yammer2Hello",
+                                                                                        "Yammer 2 Hello Scraper")
 
             # Gets the authentication token for API calls and note store url
             self.authToken = authentication_result.authenticationToken
